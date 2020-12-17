@@ -1,6 +1,7 @@
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from PIL import Image
 import numpy as np
+import os
 # If required, create a face detection pipeline using MTCNN:
 mtcnn = MTCNN()
 
@@ -14,6 +15,9 @@ name_list=[]
 name_list=name_list+['./cai/c'+str(i)+'.jpg' for i in range(1,4)]
 name_list=name_list+['./jw/jw'+str(i)+'.jpg' for i in range(1,5)]
 name_list=name_list+['./xk/xk'+str(i)+'.jpg' for i in range(1,4)]
+
+
+for f in os.listdir('./lfw')
 
 print(name_list)
 
