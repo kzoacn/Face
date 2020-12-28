@@ -1,6 +1,8 @@
 import face_recognition
 import cv2
 import numpy as np
+from facenet_pytorch import MTCNN, InceptionResnetV1
+from PIL import Image
 #import extractor
 import bw
 import math
@@ -25,9 +27,9 @@ def toZp(v,p):
         vec.append(math.floor(min(max(0,x+1),2)*p/2))
     return vec
 
-n=128
+n=512
 p=2**31-1
-t=math.floor(0.30*p/2)
+t=math.floor(0.22*p/2)
 q=(2*t+1)**(n+1)
 
 #[-1,1] -> [0,q)
@@ -38,11 +40,16 @@ FE=bw.FuzzyExtractor(n,t)
 helper=[]
 randomness=[]
 
+mtcnn = MTCNN()
+resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
 for name in name_list:
-    image=face_recognition.load_image_file(name+'.jpg')
-    face_encoding = face_recognition.face_encodings(image)[0]    
-    R,P=FE.Ext(toZp(face_encoding,p)) 
+    #image=face_recognition.load_image_file(name+'.jpg')
+    #face_encoding = face_recognition.face_encodings(image)[0]    
+    img = Image.open('./images/'+name+'.jpg')
+    img_cropped = mtcnn(img)
+    img_embedding = resnet(img_cropped.unsqueeze(0))
+    R,P=FE.Ext(toZp(img_embedding[0].tolist(),p)) 
     helper.append(P)
     randomness.append(R)
 
@@ -57,8 +64,12 @@ while True:
     rgb_frame = frame[:, :, ::-1]
 
     # Find all the faces and face enqcodings in the frame of video
-    face_locations = face_recognition.face_locations(rgb_frame)
-    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+    
+    
+    face_locations=[(100,100,0,0)]
+
+    img_cropped = mtcnn(rgb_frame)
+    face_encodings = resnet(img_cropped.unsqueeze(0)).tolist()
 
     # Loop through each face in this frame of video
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
